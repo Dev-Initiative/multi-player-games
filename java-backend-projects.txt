@@ -1,0 +1,182 @@
+JAVA BACKEND PROJECT OPTIONS
+============================
+
+Criterion used to pick these: each one has a correctness problem under
+concurrency. That is the thing that generates senior signal. The feature
+list is not the point.
+
+
+--------------------------------------------------------------------
+1. REAL-TIME MULTIPLAYER GAME SERVER
+--------------------------------------------------------------------
+
+What it is
+  A server that holds authoritative game state and pushes updates to
+  connected players over WebSockets, many times per second. Players send
+  intent ("move left"), the server decides what actually happened, and
+  broadcasts the result to everyone in the room.
+
+Core problems
+  - Hundreds of players mutating shared room state concurrently
+  - Server is authoritative: client says "I moved", server decides if true
+  - Tick loop at a fixed rate (e.g. 20/sec) independent of request arrival
+  - Matchmaking and room lifecycle (create, fill, start, tear down)
+  - Disconnect and reconnect without corrupting state
+  - Backpressure when a slow client can't keep up with the broadcast rate
+
+Java stack
+  Spring Boot + Spring WebSocket (or Netty for lower level control),
+  Redis for room registry and presence, Postgres for accounts and match
+  history.
+
+Frontend needed
+  Thin. One HTML page with a canvas and a WebSocket connection, ~200 lines
+  of JavaScript.
+
+Simulating users
+  Bot clients written in Java that connect and play. Spin up 500 of them.
+
+Resume claim you are building toward
+  "Authoritative game server sustaining N concurrent players per room at
+  20 ticks/sec, p99 update latency X ms."
+
+
+--------------------------------------------------------------------
+2. COLLABORATIVE EDITING BACKEND
+--------------------------------------------------------------------
+
+What it is
+  Multiple people type into the same document at the same time and the
+  server converges every edit into one correct final document, regardless
+  of the order edits arrive in.
+
+Core problems
+  - Concurrent edits to the same region of text
+  - Convergence: everyone must end up with an identical document
+  - Choosing and implementing CRDT or Operational Transformation
+  - Offline edits replayed on reconnect
+  - Document history and undo
+
+Java stack
+  Spring Boot + WebSocket, Postgres for document storage and operation
+  log, Redis for active session state.
+
+Frontend needed
+  Thin. A textarea and a WebSocket connection.
+
+Simulating users
+  Scripted clients that type random edits at random positions, then assert
+  all clients converged to the same string. This is a genuinely strong
+  test suite.
+
+Resume claim you are building toward
+  "CRDT-based collaborative editor backend; N concurrent editors converge
+  with zero divergence across M operations."
+
+Note
+  This is the hardest of the four conceptually. The algorithms are
+  published and testable, but the learning curve is steep.
+
+
+--------------------------------------------------------------------
+3. GEOSPATIAL DISPATCH ENGINE
+--------------------------------------------------------------------
+
+What it is
+  Riders request trips, drivers stream their location continuously, and
+  the engine matches each rider to a nearby driver in real time without
+  ever assigning the same driver twice.
+
+Core problems
+  - High-frequency location writes (every driver, every few seconds)
+  - Nearest-neighbour search over a moving dataset (geohash, H3, or PostGIS)
+  - Atomic assignment: two riders must never get the same driver
+  - Driver state machine (offline, available, assigned, on trip)
+  - Timeouts: driver does not accept within 15s, reassign
+
+Java stack
+  Spring Boot, Redis (geospatial commands) or Postgres with PostGIS,
+  Kafka for the location stream.
+
+Frontend needed
+  Thin. A map (Leaflet) with dots moving on it. Optional; a dashboard
+  works too.
+
+Simulating users
+  Driver bots walking synthetic routes, rider bots requesting trips at
+  random intervals. Very easy to generate realistic load.
+
+Resume claim you are building toward
+  "Dispatch engine handling N location updates/sec with sub-100ms match
+  latency and zero double-assignment under concurrent demand."
+
+
+--------------------------------------------------------------------
+4. DISTRIBUTED JOB SCHEDULER  (the cron one)
+--------------------------------------------------------------------
+
+What it is
+  Cron, but the cron itself is a cluster. Users register jobs to run at a
+  time or on a repeating schedule. A pool of workers executes them exactly
+  when due, exactly once, even when machines crash mid-job.
+
+Core problems
+  - Two nodes see the same due job at the same instant. Both claim it.
+    The job runs twice. Solve with distributed locks or leases.
+  - A worker dies mid-execution. Did the job finish? Leases with expiry
+    plus idempotency keys.
+  - Thundering herd: 50,000 jobs all due at 00:00.
+  - Retries with exponential backoff and a dead letter queue.
+  - Clock skew between nodes.
+  - Leader election if one node must own scheduling decisions.
+
+Java stack
+  Spring Boot, Postgres (SELECT ... FOR UPDATE SKIP LOCKED is the
+  classic claim mechanism), Redis or ZooKeeper for locks and leader
+  election, Quartz optional but hand-rolling teaches more.
+
+Frontend needed
+  None required. A small admin page listing jobs and run history is nice
+  but a Grafana dashboard is a legitimate demo on its own.
+
+Simulating users
+  A script registering thousands of jobs. Then kill worker nodes at random
+  during execution and assert no duplicates and no losses.
+
+Resume claim you are building toward
+  "Distributed scheduler executing N jobs/min across M nodes with
+  exactly-once semantics verified under randomised node failure."
+
+Why this one is different from the other three
+  No UI to distract from the engineering. Every bug is a concurrency bug
+  you can reproduce deliberately. The correct answers are known and
+  published, so you can verify you got them right. Weakest on visual
+  demo appeal, strongest on failure-mode conversation in an interview.
+
+
+--------------------------------------------------------------------
+BUILD ORDER THAT APPLIES TO ALL FOUR
+--------------------------------------------------------------------
+
+  1. Single node, single process, correct. No distribution yet.
+  2. Test suite that proves correctness with fixed inputs.
+  3. Add a second node. Watch it break. Fix it.
+  4. Load generator. Find where it falls over.
+  5. Metrics and a dashboard. Prometheus + Grafana.
+  6. Write up one failure you found and fixed, with before and after
+     graphs. This write-up is the single most valuable artifact.
+  7. Deploy it somewhere with a public URL and seeded data.
+
+
+--------------------------------------------------------------------
+WHAT MAKES ANY OF THESE COUNT
+--------------------------------------------------------------------
+
+  - Numbers, not framework names. "p99 43ms at 2000 req/s" beats a stack
+    list.
+  - One concurrency test that proves the hard guarantee holds.
+  - A README stating the trade-off you chose and why.
+  - A live URL an interviewer can click.
+  - Recent commits.
+
+  Finishing one beats starting four.
