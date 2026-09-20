@@ -145,7 +145,7 @@ than leaving them to application code:
 - A player cannot hold two seats in the same game.
 - Only the creator can start or cancel.
 
-### Three deliberate decisions
+### Four deliberate decisions
 
 These are design commitments, and survive whatever shape the schema takes.
 
@@ -166,6 +166,14 @@ These are design commitments, and survive whatever shape the schema takes.
   while the move log is still empty. Renumbering once any move exists would
   silently invalidate replay and break C3. **Nothing may renumber a seat after
   the first move.**
+
+- **A finished game keeps its log.** The state column is the disposable copy;
+  the log is not. Keeping it is what makes a finished game replayable move by
+  move — an animation from the opening to the final position — and what lets a
+  rules fix rebuild historical games instead of freezing their results. If
+  storage ever forces the issue, the answer is to archive or compress the log,
+  never to delete it. Deleting it would make C3 unverifiable exactly where a
+  wrong result is permanent and nobody is left to notice it.
 
 ---
 
