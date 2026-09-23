@@ -126,6 +126,9 @@ Adding a game must not require touching anything but `domain/`. If it does, the
 abstraction has leaked. (Battleship is the one declared exception — see
 [PROJECT.md §11](PROJECT.md).)
 
+How the layers fit together, what a request does on its way through them, and
+which of those choices the guarantees depend on: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 **Stack:** Java 21, Spring Boot 3, Postgres, Flyway, JUnit 5 + Testcontainers,
 Micrometer → Prometheus → Grafana.
 
@@ -170,3 +173,5 @@ API is complete, and as the load generator.
 
 - **[PROJECT.md](PROJECT.md)** — the full project definition: scope, non-goals,
   domain model, guarantees, milestones, risks and reversibility.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — how the backend is built: layers,
+  the claim, the write path, the log, replay, push, errors and testing.
