@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '../../../lib/cn'
 import { Disc } from '../../shared/ui/Disc'
 import type { Seat } from '../../shared/ui/seat'
-import { COLS, indexOf, landingRow, ROWS, type Position } from '../rules'
+import { indexOf, landingRow, type Position } from '../rules'
 
 type Connect4BoardProps = {
   position: Position
@@ -16,34 +16,36 @@ type Connect4BoardProps = {
 
 /**
  * The playable board. Hover or focus a column to preview, click or press
- * 1–7 to drop. Only the newest disc animates in, so reopening a game
+ * 1–9 to drop. Only the newest disc animates in, so reopening a game
  * doesn't rain every disc down again.
  */
 export function Connect4Board({ position, colors, playerSeat, onDrop }: Connect4BoardProps) {
-  const { board, winLine, lastMove } = position
+  const { board, winLine, lastMove, config: c } = position
+  const grid = { gridTemplateColumns: `repeat(${c.cols}, minmax(0, 1fr))` }
+  const gap = c.cols > 7 ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-3'
   const [hover, setHover] = useState<number | null>(null)
   const canPlay = playerSeat !== null
   const won = winLine.length > 0
 
-  // Number keys 1–7 drop into that column.
+  // Number keys drop into that column (boards are at most 9 wide).
   useEffect(() => {
     if (!canPlay) return
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea')) return
       const col = Number(e.key) - 1
-      if (Number.isInteger(col) && col >= 0 && col < COLS && landingRow(board, col) !== null) onDrop(col)
+      if (Number.isInteger(col) && col >= 0 && col < c.cols && landingRow(board, col, c) !== null) onDrop(col)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [canPlay, board, onDrop])
+  }, [canPlay, board, onDrop, c])
 
-  const hoverRow = hover !== null && canPlay ? landingRow(board, hover) : null
+  const hoverRow = hover !== null && canPlay ? landingRow(board, hover, c) : null
 
   return (
     <div className="w-full" onMouseLeave={() => setHover(null)}>
       {/* Preview row */}
-      <div className="grid grid-cols-7 gap-2 px-3 pb-3 sm:gap-3 sm:px-4" aria-hidden>
-        {Array.from({ length: COLS }, (_, col) => (
+      <div className={cn('grid px-3 pb-3 sm:px-4', gap)} style={grid} aria-hidden>
+        {Array.from({ length: c.cols }, (_, col) => (
           <div key={col} className="relative aspect-square">
             {canPlay && hover === col && hoverRow !== null && (
               <motion.div
@@ -63,9 +65,15 @@ export function Connect4Board({ position, colors, playerSeat, onDrop }: Connect4
         ))}
       </div>
 
-      <div className="relative grid grid-cols-7 gap-2 rounded-[1.75rem] bg-linear-to-b from-brand-500 to-brand-700 p-3 shadow-[0_10px_0_0_var(--color-brand-900),inset_0_2px_0_rgb(255_255_255/0.3),0_40px_80px_-30px_rgb(0_0_0/0.9)] sm:gap-3 sm:p-4">
-        {Array.from({ length: COLS }, (_, col) => {
-          const full = landingRow(board, col) === null
+      <div
+        style={grid}
+        className={cn(
+          'relative grid rounded-[1.75rem] bg-linear-to-b from-brand-500 to-brand-700 p-3 shadow-[0_10px_0_0_var(--color-brand-900),inset_0_2px_0_rgb(255_255_255/0.3),0_40px_80px_-30px_rgb(0_0_0/0.9)] sm:p-4',
+          gap,
+        )}
+      >
+        {Array.from({ length: c.cols }, (_, col) => {
+          const full = landingRow(board, col, c) === null
           return (
             <button
               key={col}
@@ -76,14 +84,15 @@ export function Connect4Board({ position, colors, playerSeat, onDrop }: Connect4
               onMouseEnter={() => setHover(col)}
               onFocus={() => setHover(col)}
               className={cn(
-                'relative flex flex-col gap-2 rounded-full transition-colors sm:gap-3',
+                'relative flex flex-col rounded-full transition-colors',
+                gap,
                 'outline-none focus-visible:ring-3 focus-visible:ring-white/70',
                 canPlay && !full && 'hover:bg-white/8',
                 (!canPlay || full) && 'cursor-not-allowed',
               )}
             >
-              {Array.from({ length: ROWS }, (_, row) => {
-                const index = indexOf(row, col)
+              {Array.from({ length: c.rows }, (_, row) => {
+                const index = indexOf(row, col, c)
                 const seat = board[index]
                 const isLast = lastMove?.index === index
                 const inLine = winLine.includes(index)

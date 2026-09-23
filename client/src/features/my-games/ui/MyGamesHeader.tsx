@@ -1,13 +1,12 @@
 import { Plus } from 'lucide-react'
 import { motion } from 'motion/react'
-import { Button } from '../../shared/ui/Button'
+import { Link } from 'react-router'
+import { buttonStyles } from '../../shared/ui/buttonStyles'
 import { rise, stagger } from '../../shared/ui/motion'
 import { statusOf, useGames } from '../../games/store'
-import { useStartConnect4 } from '../../games/useStartGame'
 
 export function MyGamesHeader() {
   const games = useGames()
-  const startGame = useStartConnect4()
   const yourTurn = games.filter((g) => statusOf(g) === 'your-turn').length
 
   return (
@@ -39,9 +38,9 @@ export function MyGamesHeader() {
         </motion.p>
       </div>
       <motion.div variants={rise}>
-        <Button size="lg" icon={Plus} onClick={startGame}>
-          New game
-        </Button>
+        <Link to="/games" className={buttonStyles({ size: 'lg' })}>
+          <Plus strokeWidth={2.5} /> New game
+        </Link>
       </motion.div>
     </motion.header>
   )

@@ -1,26 +1,31 @@
 import { Handshake, LayoutList, RotateCcw, Trophy } from 'lucide-react'
 import { motion } from 'motion/react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Button } from '../../shared/ui/Button'
 import { buttonStyles } from '../../shared/ui/buttonStyles'
 import { Disc } from '../../shared/ui/Disc'
 import { SEATS } from '../../shared/ui/seat'
-import type { GameStatus } from '../../games/store'
+import type { GameStatus } from '../store'
 
 type GameOverCardProps = {
   status: Extract<GameStatus, 'won' | 'lost' | 'draw'>
   opponentName: string
   onRematch: () => void
+  /** Extra line under the result, e.g. a final score. */
+  detail?: ReactNode
+  /** Seconds to wait before showing, so the last move can land first. */
+  delay?: number
 }
 
-// Discs that burst out behind the card on a win.
+// Pieces that burst out behind the card on a win.
 const CONFETTI = Array.from({ length: 14 }, (_, i) => {
   const angle = (i / 14) * Math.PI * 2
   return { x: Math.cos(angle) * 220, y: Math.sin(angle) * 160, seat: SEATS[i % SEATS.length], delay: (i % 4) * 0.04 }
 })
 
 /** Sits over the board once the game ends. */
-export function GameOverCard({ status, opponentName, onRematch }: GameOverCardProps) {
+export function GameOverCard({ status, opponentName, onRematch, detail, delay = 0.9 }: GameOverCardProps) {
   const first = opponentName.split(' ')[0]
   const copy = {
     won: { title: 'Victory!', body: `You beat ${first}.` },
@@ -33,7 +38,7 @@ export function GameOverCard({ status, opponentName, onRematch }: GameOverCardPr
       className="absolute inset-0 z-10 grid place-items-center rounded-[1.75rem] bg-night-950/55 backdrop-blur-[3px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 0.9, duration: 0.3 }}
+      transition={{ delay, duration: 0.3 }}
     >
       {status === 'won' &&
         CONFETTI.map((c, i) => (
@@ -42,7 +47,7 @@ export function GameOverCard({ status, opponentName, onRematch }: GameOverCardPr
             className="absolute size-6"
             initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
             animate={{ x: c.x, y: c.y, scale: 1, opacity: 0, rotate: 180 }}
-            transition={{ duration: 1.2, delay: 1 + c.delay, ease: 'easeOut' }}
+            transition={{ duration: 1.2, delay: delay + 0.1 + c.delay, ease: 'easeOut' }}
           >
             <Disc seat={c.seat} className="size-full" />
           </motion.span>
@@ -52,7 +57,7 @@ export function GameOverCard({ status, opponentName, onRematch }: GameOverCardPr
         className="panel w-[min(20rem,calc(100%-2rem))] rounded-3xl p-6 text-center"
         initial={{ scale: 0.7, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.95 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 18, delay: delay + 0.05 }}
       >
         <span
           className={
@@ -61,10 +66,15 @@ export function GameOverCard({ status, opponentName, onRematch }: GameOverCardPr
               : 'mx-auto grid size-16 place-items-center rounded-2xl bg-night-700 text-night-100'
           }
         >
-          {status === 'draw' ? <Handshake className="size-8" strokeWidth={2.25} /> : <Trophy className="size-8" strokeWidth={2.25} />}
+          {status === 'draw' ? (
+            <Handshake className="size-8" strokeWidth={2.25} />
+          ) : (
+            <Trophy className="size-8" strokeWidth={2.25} />
+          )}
         </span>
         <h2 className="mt-4 text-3xl font-extrabold">{copy.title}</h2>
         <p className="mt-1 text-night-300">{copy.body}</p>
+        {detail && <div className="mt-3">{detail}</div>}
         <div className="mt-6 grid gap-2.5">
           <Button icon={RotateCcw} onClick={onRematch} className="w-full">
             Rematch

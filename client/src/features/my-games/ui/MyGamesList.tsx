@@ -2,23 +2,23 @@ import { Gamepad2, Plus, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { cn } from '../../../lib/cn'
-import { Button } from '../../shared/ui/Button'
+import { Link } from 'react-router'
+import { buttonStyles } from '../../shared/ui/buttonStyles'
 import { EmptyState } from '../../shared/ui/EmptyState'
-import { isFinished, statusOf, useGames, type GameRecord } from '../../games/store'
-import { useStartConnect4 } from '../../games/useStartGame'
+import { GAMES } from '../../games/catalog'
+import { isClosed, statusOf, useGames, type GameRecord } from '../../games/store'
 import { GameRow } from './GameRow'
 
 const TABS: { id: string; label: string; match: (g: GameRecord) => boolean }[] = [
   { id: 'your-turn', label: 'Your turn', match: (g) => statusOf(g) === 'your-turn' },
-  { id: 'their-turn', label: 'Their turn', match: (g) => statusOf(g) === 'their-turn' },
-  { id: 'finished', label: 'Finished', match: (g) => isFinished(statusOf(g)) },
+  { id: 'their-turn', label: 'Their turn', match: (g) => ['their-turn', 'lobby'].includes(statusOf(g)) },
+  { id: 'finished', label: 'Finished', match: (g) => isClosed(statusOf(g)) },
   { id: 'all', label: 'All', match: () => true },
 ]
 
-/** Every game you're in, filterable by whose move it is and searchable by opponent. */
+/** Every game you're in, filterable by whose move it is and searchable by player or game. */
 export function MyGamesList() {
   const games = useGames()
-  const startGame = useStartConnect4()
   const [tab, setTab] = useState('your-turn')
   const [query, setQuery] = useState('')
 
@@ -27,7 +27,11 @@ export function MyGamesList() {
   const shown = [...games]
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .filter(active.match)
-    .filter((g) => !q || g.seats.some((s) => !s.isYou && s.name.toLowerCase().includes(q)))
+    .filter((g) => {
+      if (!q) return true
+      const title = GAMES.find((meta) => meta.id === g.type)?.title.toLowerCase() ?? ''
+      return title.includes(q) || g.seats.some((s) => !s.isYou && s.name.toLowerCase().includes(q))
+    })
 
   return (
     <div>
@@ -72,12 +76,12 @@ export function MyGamesList() {
 
         <label className="flex h-11 w-full items-center gap-3 rounded-2xl bg-night-900 px-4 shadow-[inset_0_2px_4px_rgb(0_0_0/0.45)] ring-2 ring-white/8 transition-shadow focus-within:ring-brand-500 md:w-72">
           <Search className="size-4.5 text-night-400" strokeWidth={2.5} aria-hidden />
-          <span className="sr-only">Search by opponent</span>
+          <span className="sr-only">Search by player or game</span>
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by opponent"
+            placeholder="Search player or game"
             className="h-full min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none placeholder:font-normal placeholder:text-night-500"
           />
         </label>
@@ -94,11 +98,11 @@ export function MyGamesList() {
       ) : (
         <EmptyState
           icon={Gamepad2}
-          title={q ? 'No games with that player' : tab === 'your-turn' ? "You're all caught up" : 'Nothing here yet'}
+          title={q ? 'No games match that' : tab === 'your-turn' ? "You're all caught up" : 'Nothing here yet'}
           action={
-            <Button icon={Plus} onClick={startGame}>
-              New game
-            </Button>
+            <Link to="/games" className={buttonStyles()}>
+              <Plus strokeWidth={2.5} /> New game
+            </Link>
           }
         >
           {q

@@ -14,7 +14,8 @@ export function MiniBoard({ position, colors }: { position: Position; colors: Se
   return (
     <div
       aria-hidden
-      className="grid w-20 shrink-0 grid-cols-7 gap-[3px] rounded-lg bg-linear-to-b from-brand-500 to-brand-700 p-1.5"
+      style={{ gridTemplateColumns: `repeat(${position.config.cols}, minmax(0, 1fr))` }}
+      className="grid w-20 shrink-0 content-center gap-[3px] self-stretch rounded-lg bg-linear-to-b from-brand-500 to-brand-700 p-1.5"
     >
       {position.board.map((seat, i) => (
         <span

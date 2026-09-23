@@ -1,90 +1,59 @@
-import { SearchX } from 'lucide-react'
-import { MotionConfig } from 'motion/react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
+import { ConfigChips } from '../features/connect4/ui/ConfigChips'
 import { Connect4Board } from '../features/connect4/ui/Connect4Board'
-import { GameHeader } from '../features/connect4/ui/GameHeader'
-import { GameOverCard } from '../features/connect4/ui/GameOverCard'
-import { MoveHistory } from '../features/connect4/ui/MoveHistory'
-import { PlayersPanel } from '../features/connect4/ui/PlayersPanel'
-import { TurnBanner } from '../features/connect4/ui/TurnBanner'
 import { useConnect4Game } from '../features/connect4/useConnect4Game'
-import { isFinished, rematch } from '../features/games/store'
-import { buttonStyles } from '../features/shared/ui/buttonStyles'
-import { EmptyState } from '../features/shared/ui/EmptyState'
-import { SiteNav } from '../features/shared/ui/SiteNav'
+import { gamePath, rematch } from '../features/games/store'
+import { GameNotFound } from '../features/games/ui/GameNotFound'
+import { GameScreen } from '../features/games/ui/GameScreen'
+import { Disc } from '../features/shared/ui/Disc'
+import { Kbd } from '../features/shared/ui/Kbd'
 
 export function Connect4Page() {
   const { gameId } = useParams()
   const navigate = useNavigate()
-  const { game, position, status, you, opponent, play, resign } = useConnect4Game(gameId)
+  const session = useConnect4Game(gameId)
+  const { game, position, status, you, play } = session
 
-  if (!game || !position || !status) {
-    return (
-      <div className="min-h-screen">
-        <SiteNav />
-        <main className="mx-auto max-w-xl px-4 py-24">
-          <EmptyState
-            icon={SearchX}
-            title="Game not found"
-            action={
-              <Link to="/my-games" className={buttonStyles()}>
-                Back to my games
-              </Link>
-            }
-          >
-            It may have been started on another device. Games live on this browser until the server is connected.
-          </EmptyState>
-        </main>
-      </div>
-    )
-  }
+  if (!game || !position || !status) return <GameNotFound />
 
+  const { cols, rows, connect } = position.config
   const colors = game.seats.map((s) => s.color)
-  const finished = isFinished(status)
+  const rules = [
+    'Take turns dropping a disc into any column.',
+    'It falls to the lowest open slot in that column.',
+    `Line up ${connect} of your discs in a row, across, down or diagonally, to win.`,
+    `The board is ${cols} wide and ${rows} tall. If it fills up with no winner, it's a draw.`,
+  ]
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="min-h-screen">
-        <SiteNav />
-        <main className="mx-auto max-w-6xl px-4 pt-8 pb-20 sm:px-8">
-          <GameHeader game={game} status={status} onResign={resign} />
-
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            <div className="mx-auto w-full max-w-[36rem]">
-              <TurnBanner
-                status={status}
-                you={game.seats[you]}
-                opponent={game.seats[opponent]}
-                resigned={game.resignedBy !== null}
-              />
-              <div className="relative mt-6">
-                <Connect4Board
-                  position={position}
-                  colors={colors}
-                  playerSeat={status === 'your-turn' ? you : null}
-                  onDrop={play}
-                />
-                {finished && (
-                  <GameOverCard
-                    status={status}
-                    opponentName={game.seats[opponent].name}
-                    onRematch={() => navigate(`/games/connect-4/${rematch(game.id)}`)}
-                  />
-                )}
-              </div>
-            </div>
-
-            <aside className="space-y-4">
-              <PlayersPanel
-                game={game}
-                currentSeat={finished ? null : position.currentSeat}
-                winner={game.resignedBy !== null ? 1 - game.resignedBy : position.winner}
-              />
-              <MoveHistory game={game} />
-            </aside>
-          </div>
-        </main>
-      </div>
-    </MotionConfig>
+    <GameScreen
+      {...session}
+      game={game}
+      status={status}
+      piece={(seat, className = 'size-4') => <Disc seat={colors[seat]} className={className} />}
+      rules={rules}
+      variantLabel={`${cols}×${rows} · connect ${connect}`}
+      setupSummary={<ConfigChips config={position.config} />}
+      hint={
+        <>
+          Click a column, or press <Kbd>1</Kbd>–<Kbd>{String(cols)}</Kbd>
+        </>
+      }
+      winDetail={`${connect} in a row.`}
+      lossDetail="Rematch?"
+      describeMove={(m) => `Dropped in column ${m.move + 1}`}
+      newGamePath="/games/connect-4/new"
+      onResign={session.resign}
+      onCancel={session.cancel}
+      onRematch={() => navigate(gamePath({ type: game.type, id: rematch(game.id) }))}
+      board={
+        <Connect4Board
+          position={position}
+          colors={colors}
+          playerSeat={status === 'your-turn' ? you : null}
+          onDrop={play}
+        />
+      }
+    />
   )
 }

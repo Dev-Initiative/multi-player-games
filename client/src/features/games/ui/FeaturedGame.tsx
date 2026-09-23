@@ -3,12 +3,12 @@ import { motion } from 'motion/react'
 import { Badge } from '../../shared/ui/Badge'
 import { Button } from '../../shared/ui/Button'
 import { EASE_OUT } from '../../shared/ui/motion'
-import { useStartConnect4 } from '../useStartGame'
+import { useStartGame } from '../useStartGame'
 import { Connect4Preview } from './Connect4Preview'
 
 /** Game of the week: rules up front, with the board replaying beside them. */
 export function FeaturedGame() {
-  const startConnect4 = useStartConnect4()
+  const startGame = useStartGame()
   return (
     <motion.section
       initial={{ opacity: 0, y: 30 }}
@@ -32,7 +32,7 @@ export function FeaturedGame() {
           across, down or diagonally, wins.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button size="lg" icon={Play} onClick={startConnect4}>
+          <Button size="lg" icon={Play} onClick={() => startGame('connect-4')}>
             Play now
           </Button>
           <Button size="lg" variant="secondary" icon={BookOpen}>
