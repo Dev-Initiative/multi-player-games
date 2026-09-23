@@ -11,7 +11,6 @@ import { GamesPage } from './pages/GamesPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { MyGamesPage } from './pages/MyGamesPage.tsx'
-import { NewConnect4Page } from './pages/NewConnect4Page.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
 import { StylesGuidePage } from './pages/StylesGuidePage.tsx'
 
@@ -22,9 +21,8 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/games', element: <GamesPage /> },
-      { path: '/games/connect-4/new', element: <NewConnect4Page /> },
-      { path: '/games/connect-4/:gameId', element: <Connect4Page /> },
-      { path: '/games/dots-and-boxes/:gameId', element: <DotsAndBoxesPage /> },
+      { path: '/games/connect-4', element: <Connect4Page /> },
+      { path: '/games/dots-and-boxes', element: <DotsAndBoxesPage /> },
       { path: '/my-games', element: <MyGamesPage /> },
       {
         element: <GuestOnly />,

@@ -17,9 +17,13 @@ export type GameCategory = 'strategy' | 'quick' | 'party'
 
 export type Game = {
   id: string
+  /** The game's board page, for games that have one. */
+  path?: string
   title: string
   tagline: string
   players: string
+  /** How many players can sit at one game, you included. */
+  seats: { min: number; max: number }
   /** Typical length when both players move promptly. */
   length: string
   category: GameCategory
@@ -33,9 +37,11 @@ export type Game = {
 export const GAMES: Game[] = [
   {
     id: 'connect-4',
+    path: '/games/connect-4',
     title: 'Connect 4',
     tagline: 'Drop discs, line up four before they do.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~15 moves',
     category: 'strategy',
     icon: Circle,
@@ -44,9 +50,11 @@ export const GAMES: Game[] = [
   },
   {
     id: 'dots-and-boxes',
+    path: '/games/dots-and-boxes',
     title: 'Dots and Boxes',
     tagline: 'Draw lines, close boxes, steal the board.',
     players: '2–4 players',
+    seats: { min: 2, max: 4 },
     length: '~30 moves',
     category: 'party',
     icon: Grip,
@@ -58,6 +66,7 @@ export const GAMES: Game[] = [
     title: 'Battleship',
     tagline: 'Hide your fleet. Hunt theirs.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~40 moves',
     category: 'strategy',
     icon: Ship,
@@ -69,6 +78,7 @@ export const GAMES: Game[] = [
     title: 'Tic-tac-toe',
     tagline: 'Three in a row. Over before lunch.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~5 moves',
     category: 'quick',
     icon: Hash,
@@ -80,6 +90,7 @@ export const GAMES: Game[] = [
     title: 'Checkers',
     tagline: 'Jump, capture, get crowned.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~40 moves',
     category: 'strategy',
     icon: Crown,
@@ -91,6 +102,7 @@ export const GAMES: Game[] = [
     title: 'Reversi',
     tagline: 'Flip the board one disc at a time.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~30 moves',
     category: 'strategy',
     icon: CircleDot,
@@ -102,6 +114,7 @@ export const GAMES: Game[] = [
     title: 'Mancala',
     tagline: 'Sow the stones, fill your store.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~25 moves',
     category: 'quick',
     icon: Egg,
@@ -113,6 +126,7 @@ export const GAMES: Game[] = [
     title: 'Word Grid',
     tagline: 'Build words across a shared board.',
     players: '2–4 players',
+    seats: { min: 2, max: 4 },
     length: '~20 moves',
     category: 'party',
     icon: Type,
@@ -124,6 +138,7 @@ export const GAMES: Game[] = [
     title: 'Dice Duel',
     tagline: 'Roll, bank, or push your luck.',
     players: '2–6 players',
+    seats: { min: 2, max: 6 },
     length: '~10 rounds',
     category: 'party',
     icon: Dice5,
@@ -135,6 +150,7 @@ export const GAMES: Game[] = [
     title: 'Chess',
     tagline: 'The long game, one move a day.',
     players: '2 players',
+    seats: { min: 2, max: 2 },
     length: '~40 moves',
     category: 'strategy',
     icon: Castle,
