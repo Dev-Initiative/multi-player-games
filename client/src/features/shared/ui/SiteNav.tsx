@@ -7,6 +7,7 @@ import { EASE_OUT } from './motion'
 
 const LINKS = [
   ['Games', '/games'],
+  ['My games', '/my-games'],
   ['How it works', '/#how'],
   ['Leaderboard', '/#leaderboard'],
 ]
@@ -40,7 +41,7 @@ export function SiteNav() {
               className={({ isActive }) =>
                 cn(
                   'rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:bg-white/6 hover:text-white',
-                  isActive && to === '/games' ? 'bg-white/6 text-white' : 'text-night-300',
+                  isActive && !to.includes('#') ? 'bg-white/6 text-white' : 'text-night-300',
                 )
               }
             >

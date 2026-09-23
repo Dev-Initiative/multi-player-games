@@ -6,7 +6,7 @@ import { seatVars } from '../../shared/ui/seat'
 import type { Game } from '../catalog'
 
 /** A game in the library: art on top, rules and meta below. */
-export function GameCard({ game }: { game: Game }) {
+export function GameCard({ game, onPlay }: { game: Game; onPlay?: () => void }) {
   const { title, tagline, players, length, icon: Icon, seat, status } = game
   const soon = status === 'soon'
 
@@ -56,13 +56,14 @@ export function GameCard({ game }: { game: Game }) {
           </span>
         </div>
         <div className="mt-5 flex flex-1 items-end">
-          {soon ? (
+          {soon || !onPlay ? (
             <div className="flex h-11 w-full items-center justify-center rounded-2xl border-2 border-dashed border-white/10 font-display text-sm font-bold text-night-400">
-              In the workshop
+              {soon ? 'In the workshop' : 'Board coming to the web'}
             </div>
           ) : (
             <button
               type="button"
+              onClick={onPlay}
               className="press inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-(--seat) font-display font-bold text-night-950 [--press-depth:4px] [--press-edge:var(--seat-deep)] hover:brightness-105 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand-400"
             >
               <Play className="size-4 fill-current" aria-hidden /> Play {title}

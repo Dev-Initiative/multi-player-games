@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { cn } from '../../../lib/cn'
 import { EASE_OUT } from '../../shared/ui/motion'
 import { GAMES, type Game } from '../catalog'
+import { useStartConnect4 } from '../useStartGame'
 import { GameCard } from './GameCard'
 
 const FILTERS: { id: string; label: string; match: (g: Game) => boolean }[] = [
@@ -15,6 +16,7 @@ const FILTERS: { id: string; label: string; match: (g: Game) => boolean }[] = [
 
 /** Filter pills and the grid of game cards. */
 export function GameLibrary() {
+  const startConnect4 = useStartConnect4()
   const [filter, setFilter] = useState('all')
   const active = FILTERS.find((f) => f.id === filter) ?? FILTERS[0]
   const games = GAMES.filter(active.match)
@@ -66,7 +68,7 @@ export function GameLibrary() {
                 default: { duration: 0.35, ease: EASE_OUT, delay: i * 0.03 },
               }}
             >
-              <GameCard game={game} />
+              <GameCard game={game} onPlay={game.id === 'connect-4' ? startConnect4 : undefined} />
             </motion.div>
           ))}
         </AnimatePresence>
